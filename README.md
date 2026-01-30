@@ -25,5 +25,8 @@ It integrates real-time traffic data, backend analysis, and interactive map-base
 
 ## Screenshots
 
-Add screenshots inside the `screenshots/` folder.
+### Dashboard View
+![Dashboard](screenshots/dashboard.png)
 
+### Route Analysis View
+![Route Analysis](screenshots/route_analysis.png)
