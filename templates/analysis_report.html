@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Analysis Report - Traffic Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/static/elite-styles.css" />
+    <style>
+        .report-container {
+            min-height: 100vh;
+            padding: 20px;
+            max-width: 100%;
+        }
+        .report-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-lg);
+        }
+        .chart-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-lg);
+            height: 400px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div class="report-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div>
+                <h1 id="route-title" style="margin: 0 0 10px 0;">Loading...</h1>
+                <div id="user-info-header" style="display: none; color: rgba(255,255,255,0.8); font-size: 14px;">
+                    <span id="logged-in-user">Not logged in</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn btn-primary" onclick="window.location.href='/'">← Back to Route Analyzer</button>
+                <button class="btn btn-primary" id="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+                <button class="btn btn-primary" onclick="loadAnalysisData()" style="background: #10b981; border: none;">🔄 Reload Report</button>
+            </div>
+        </div>
+        
+        <div id="loading" style="text-align: center; padding: 40px;">
+            <div class="loading-spinner"></div>
+            <p>Loading analysis data...</p>
+        </div>
+        
+        <div id="error-container"></div>
+        
+        <div id="content" style="display: none;">
+            <div id="route-details" class="stats-grid"></div>
+            <div id="stats-grid" class="stats-grid"></div>
+            
+            <div class="chart-container">
+                <h3>Travel Time Trends</h3>
+                <canvas id="travelTimeChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h3>Delay Analysis</h3>
+                <canvas id="delayChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h3>Congestion Ratio</h3>
+                <canvas id="congestionChart"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h3>Cost Comparison</h3>
+                <canvas id="costChart"></canvas>
+            </div>
+            
+            <div class="chart-container" style="height: 500px;">
+                <h3>📈 Time Series Analysis</h3>
+                <p style="color: rgba(255,255,255,0.7); font-size: 14px; margin-bottom: 15px;">Comprehensive view of all metrics over time</p>
+                <canvas id="timeSeriesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/auth.js"></script>
+    <script>
+        // Check auth and restrict admin access
+        async function initReportAuth() {
+            const user = await checkAuth();
+            if (user && user.is_admin) {
+                // Admin users should not access detailed reports
+                document.body.innerHTML = `
+                    <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px;">
+                        <div style="background: white; border-radius: 20px; padding: 40px; max-width: 600px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                            <h1 style="color: #ff9800; margin-bottom: 20px; font-size: 32px;">👑 Admin Access Restricted</h1>
+                            <p style="color: #666; font-size: 18px; margin-bottom: 30px; line-height: 1.6;">
+                                Detailed reports and route analyzer are available only for regular users. As an admin, you have access to the <strong>Admin Panel</strong> for system management and analytics.
+                            </p>
+                            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                                <button onclick="window.location.href='/admin'" 
+                                        style="padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 16px; transition: transform 0.3s;"
+                                        onmouseover="this.style.transform='translateY(-2px)'"
+                                        onmouseout="this.style.transform='translateY(0)'">
+                                    Go to Admin Panel →
+                                </button>
+                                <button onclick="window.location.href='/'" 
+                                        style="padding: 15px 30px; background: #e2e8f0; color: #2d3748; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 16px; transition: transform 0.3s;"
+                                        onmouseover="this.style.transform='translateY(-2px)'"
+                                        onmouseout="this.style.transform='translateY(0)'">
+                                    ← Back to Home
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            if (user) {
+                const userInfoDiv = document.getElementById('user-info-header');
+                const userSpan = document.getElementById('logged-in-user');
+                if (userInfoDiv && userSpan) {
+                    userInfoDiv.style.display = 'block';
+                    userSpan.textContent = `Logged in as: ${user.username}`;
+                }
+            }
+        }
+        
+        // Initialize auth on page load
+        document.addEventListener('DOMContentLoaded', initReportAuth);
+    </script>
+    <script>
+        let currentRouteId = null;
+        let currentRouteIndex = null;
+        let charts = {};
+
+        function formatPlace(place) {
+            if (!place) return 'Unknown';
+            if (typeof place === 'string') return place;
+            if (place.name) return place.name;
+            if (place.lat && place.lon) return `${place.lat}, ${place.lon}`;
+            try {
+                return JSON.stringify(place);
+            } catch {
+                return String(place);
+            }
+        }
+
+        function getRouteParams() {
+            const params = new URLSearchParams(window.location.search);
+            currentRouteId = params.get('route_id');
+            currentRouteIndex = params.get('route_index') ? parseInt(params.get('route_index')) : null;
+            return { routeId: currentRouteId, routeIndex: currentRouteIndex };
+        }
+
+        async function loadAnalysisData() {
+            const { routeId, routeIndex } = getRouteParams();
+
+            if (!routeId || routeId === 'null' || routeId === 'undefined') {
+                document.getElementById('loading').style.display = 'none';
+                const errorContainer = document.getElementById('error-container');
+                errorContainer.innerHTML = `
+                    <div class="error" style="text-align: center; padding: 40px;">
+                        <h3 style="margin-bottom: 15px;">⚠️ No Route Selected</h3>
+                        <p style="margin-bottom: 20px;">Please go back to the Route Analyzer and click "View Detailed Dashboard Report" on a route card.</p>
+                        <button class="btn btn-primary" onclick="window.location.href='/'">← Back to Route Analyzer</button>
+                    </div>`;
+                return;
+            }
+
+            try {
+                // Add cache-busting timestamp to ensure fresh data
+                const timestamp = new Date().getTime();
+                const url = `/api/route-analysis/${encodeURIComponent(routeId)}${routeIndex !== null ? `?route_index=${routeIndex}` : ''}&_t=${timestamp}`;
+                console.log('Fetching analysis data from:', url);
+                const response = await fetch(url, {
+                    cache: 'no-store',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    if (response.status === 404) {
+                        document.getElementById('loading').style.display = 'none';
+                        const errorContainer = document.getElementById('error-container');
+                        errorContainer.innerHTML = `
+                            <div class="error" style="text-align: center; padding: 40px;">
+                                <h3 style="margin-bottom: 15px;">📊 No Historical Data Yet</h3>
+                                <p style="margin-bottom: 20px;">This route hasn't been analyzed yet. Go back and analyze the route first, then view the report.</p>
+                                <button class="btn btn-primary" onclick="window.location.href='/'">← Back to Route Analyzer</button>
+                            </div>`;
+                        return;
+                    }
+                    throw new Error(error.detail || 'Failed to load analysis data');
+                }
+
+                const data = await response.json();
+                
+                // Log when data was fetched for debugging
+                if (data.fetched_at) {
+                    console.log('Data fetched at:', new Date(data.fetched_at).toLocaleString());
+                }
+                
+                // Check if we have the latest data
+                if (data.analysis_data && data.analysis_data.length > 0) {
+                    const latestTimestamp = new Date(data.analysis_data[0].timestamp);
+                    const now = new Date();
+                    const timeDiff = (now - latestTimestamp) / 1000 / 60; // minutes
+                    console.log('Latest data timestamp:', latestTimestamp.toLocaleString());
+                    console.log('Time difference from now:', timeDiff.toFixed(2), 'minutes');
+                    
+                    // Warn if data is more than 5 minutes old
+                    if (timeDiff > 5) {
+                        console.warn('⚠️ Latest data is', timeDiff.toFixed(1), 'minutes old. Consider refreshing.');
+                    }
+                }
+
+                if (!data.analysis_data || data.analysis_data.length === 0) {
+                    document.getElementById('loading').style.display = 'none';
+                    const errorContainer = document.getElementById('error-container');
+                    errorContainer.innerHTML = `
+                        <div class="error" style="text-align: center; padding: 40px;">
+                            <h3 style="margin-bottom: 15px;">📊 No Data Available</h3>
+                            <p style="margin-bottom: 20px;">No analysis data found for this route. Analyze the route first to see the dashboard.</p>
+                            <button class="btn btn-primary" onclick="window.location.href='/'">← Back to Route Analyzer</button>
+                        </div>`;
+                    return;
+                }
+
+                displayAnalysis(data);
+            } catch (error) {
+                console.error('Error loading analysis:', error);
+                showError(`Error loading data: ${error.message}`);
+            }
+        }
+
+        function displayAnalysis(data) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+
+            const routeTitle = document.getElementById('route-title');
+            if (data.analysis_data && data.analysis_data.length > 0) {
+                const latest = data.analysis_data[0];
+                routeTitle.textContent = `${formatPlace(latest.origin)} → ${formatPlace(latest.destination)}`;
+            }
+            
+            // Ensure Chart.js is available before creating charts
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded yet');
+                setTimeout(() => displayAnalysis(data), 500);
+                return;
+            }
+
+            if (data.latest) {
+                const details = data.latest;
+                const detailsHtml = `
+                    <div class="detail-item">
+                        <div class="detail-label">Origin</div>
+                        <div class="detail-value">${formatPlace(details.origin)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Destination</div>
+                        <div class="detail-value">${formatPlace(details.destination)}</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Distance</div>
+                        <div class="detail-value">${(details.length_m / 1000).toFixed(1)} km</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Latest Travel Time</div>
+                        <div class="detail-value">${Math.round(details.travel_time_s / 60)} min</div>
+                    </div>
+                `;
+                document.getElementById('route-details').innerHTML = detailsHtml;
+            }
+
+            if (data.statistics) {
+                const stats = data.statistics;
+                const statsHtml = `
+                    <div class="stat-card">
+                        <h4>Average Travel Time</h4>
+                        <div class="value">${Math.round(stats.avg_travel_time / 60)} min</div>
+                        <div class="change">Based on ${stats.total_records} records</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Average Delay</h4>
+                        <div class="value">${(() => {
+                            // Calculate delay if stats don't have it
+                            let avgDelay = stats.avg_delay || 0;
+                            if (!avgDelay || avgDelay === 0) {
+                                // Recalculate from data
+                                const delays = data.analysis_data.map(d => {
+                                    let delayVal = d.delay_s || 0;
+                                    if (!delayVal && d.travel_time_s && d.no_traffic_s) {
+                                        delayVal = Math.max(0, d.travel_time_s - d.no_traffic_s);
+                                    }
+                                    return delayVal;
+                                });
+                                avgDelay = delays.length > 0 ? delays.reduce((a, b) => a + b, 0) / delays.length : 0;
+                            }
+                            return Math.round(avgDelay / 60);
+                        })()} min</div>
+                        <div class="change">Traffic impact</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Average Congestion</h4>
+                        <div class="value">${stats.avg_congestion ? stats.avg_congestion.toFixed(2) : 'N/A'}x</div>
+                        <div class="change">Congestion ratio</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Average Cost</h4>
+                        <div class="value">${stats.avg_cost ? stats.avg_cost.toFixed(2) : 'N/A'}</div>
+                        <div class="change">Weighted cost score</div>
+                    </div>
+                `;
+                document.getElementById('stats-grid').innerHTML = statsHtml;
+            }
+
+            const timestamps = data.analysis_data.map(d => new Date(d.timestamp)).reverse();
+            const travelTimes = data.analysis_data.map(d => d.travel_time_s / 60).reverse();
+            // Calculate delay if not provided (delay = travel_time - no_traffic_time)
+            const delays = data.analysis_data.map(d => {
+                let delayVal = d.delay_s || 0;
+                if (!delayVal && d.travel_time_s && d.no_traffic_s) {
+                    delayVal = Math.max(0, d.travel_time_s - d.no_traffic_s);
+                }
+                return delayVal / 60;
+            }).reverse();
+            const congestionRatios = data.analysis_data.map(d => d.congestion_ratio || 0).reverse();
+            const costs = data.analysis_data.map(d => d.calculated_cost || 0).reverse();
+
+            // Create charts with a small delay to ensure DOM is ready
+            setTimeout(() => {
+                try {
+                    createTravelTimeChart(timestamps, travelTimes);
+                    createDelayChart(timestamps, delays);
+                    createCongestionChart(timestamps, congestionRatios);
+                    createCostChart(timestamps, costs);
+                    createTimeSeriesChart(timestamps, travelTimes, delays, congestionRatios, costs);
+                } catch (error) {
+                    console.error('Error creating charts:', error);
+                    // Retry once after a longer delay
+                    setTimeout(() => {
+            createTravelTimeChart(timestamps, travelTimes);
+            createDelayChart(timestamps, delays);
+            createCongestionChart(timestamps, congestionRatios);
+            createCostChart(timestamps, costs);
+                        createTimeSeriesChart(timestamps, travelTimes, delays, congestionRatios, costs);
+                    }, 1000);
+                }
+            }, 100);
+        }
+
+        function createTravelTimeChart(timestamps, values) {
+            const ctx = document.getElementById('travelTimeChart');
+            if (!ctx) {
+                console.error('Travel time chart canvas not found');
+                return;
+            }
+            const canvasCtx = ctx.getContext('2d');
+            if (charts.travelTime) charts.travelTime.destroy();
+            charts.travelTime = new Chart(canvasCtx, {
+                type: 'line',
+                data: {
+                    labels: timestamps.map(t => {
+                        const date = new Date(t);
+                        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    }),
+                    datasets: [{
+                        label: 'Travel Time (minutes)',
+                        data: values,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Minutes' } }
+                    }
+                }
+            });
+        }
+
+        function createDelayChart(timestamps, values) {
+            const ctx = document.getElementById('delayChart');
+            if (!ctx) {
+                console.error('Delay chart canvas not found');
+                return;
+            }
+            
+            const canvasCtx = ctx.getContext('2d');
+            if (charts.delay) charts.delay.destroy();
+            
+            // Handle zero or near-zero delays - use line chart for better visibility
+            const hasNonZeroValues = values.some(v => v > 0.01);
+            const chartType = hasNonZeroValues ? 'bar' : 'line';
+            
+            // If all zeros, show a message or use a different visualization
+            if (!hasNonZeroValues) {
+                // Still create chart but with line type and annotation
+                console.log('All delay values are zero or near-zero');
+            }
+            
+            charts.delay = new Chart(canvasCtx, {
+                type: chartType,
+                data: {
+                    labels: timestamps.map(t => {
+                        const date = new Date(t);
+                        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    }),
+                    datasets: [{
+                        label: 'Delay (minutes)',
+                        data: values,
+                        backgroundColor: hasNonZeroValues ? 'rgba(255, 152, 0, 0.6)' : 'rgba(255, 152, 0, 0.2)',
+                        borderColor: '#ff9800',
+                        borderWidth: hasNonZeroValues ? 1 : 2,
+                        fill: !hasNonZeroValues,
+                        tension: !hasNonZeroValues ? 0.4 : 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { 
+                        legend: { display: true, position: 'top' },
+                        annotation: hasNonZeroValues ? undefined : {
+                            annotations: {
+                                zeroLine: {
+                                    type: 'line',
+                                    yMin: 0,
+                                    yMax: 0,
+                                    borderColor: '#ff9800',
+                                    borderWidth: 2,
+                                    label: {
+                                        content: 'No significant delays detected',
+                                        enabled: true,
+                                        position: 'end'
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            title: { display: true, text: 'Minutes' },
+                            suggestedMax: hasNonZeroValues ? undefined : 0.1 // Show small range for zero values
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: { size: 10 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCongestionChart(timestamps, values) {
+            const ctx = document.getElementById('congestionChart');
+            if (!ctx) {
+                console.error('Congestion chart canvas not found');
+                return;
+            }
+            const canvasCtx = ctx.getContext('2d');
+            if (charts.congestion) charts.congestion.destroy();
+            charts.congestion = new Chart(canvasCtx, {
+                type: 'line',
+                data: {
+                    labels: timestamps.map(t => {
+                        const date = new Date(t);
+                        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    }),
+                    datasets: [{
+                        label: 'Congestion Ratio',
+                        data: values,
+                        borderColor: '#f44336',
+                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, position: 'top' } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Ratio' } } }
+                }
+            });
+        }
+
+        function createCostChart(timestamps, values) {
+            const ctx = document.getElementById('costChart');
+            if (!ctx) {
+                console.error('Cost chart canvas not found');
+                return;
+            }
+            const canvasCtx = ctx.getContext('2d');
+            if (charts.cost) charts.cost.destroy();
+            charts.cost = new Chart(canvasCtx, {
+                type: 'line',
+                data: {
+                    labels: timestamps.map(t => {
+                        const date = new Date(t);
+                        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    }),
+                    datasets: [{
+                        label: 'Cost Score',
+                        data: values,
+                        borderColor: '#4caf50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: true, position: 'top' } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Cost' } } }
+                }
+            });
+        }
+
+        function createTimeSeriesChart(timestamps, travelTimes, delays, congestionRatios, costs) {
+            const ctx = document.getElementById('timeSeriesChart');
+            if (!ctx) return;
+            
+            const canvasCtx = ctx.getContext('2d');
+            if (charts.timeSeries) charts.timeSeries.destroy();
+            
+            // Normalize costs for better visualization (scale to similar range as travel time)
+            const maxTravelTime = Math.max(...travelTimes);
+            const maxCost = Math.max(...costs);
+            const costScale = maxTravelTime / (maxCost || 1);
+            const normalizedCosts = costs.map(c => c * costScale);
+            
+            charts.timeSeries = new Chart(canvasCtx, {
+                type: 'line',
+                data: {
+                    labels: timestamps.map(t => {
+                        const date = new Date(t);
+                        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    }),
+                    datasets: [
+                        {
+                            label: 'Travel Time (min)',
+                            data: travelTimes,
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            yAxisID: 'y',
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        },
+                        {
+                            label: 'Delay (min)',
+                            data: delays,
+                            borderColor: '#ff9800',
+                            backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            yAxisID: 'y',
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        },
+                        {
+                            label: 'Congestion Ratio',
+                            data: congestionRatios,
+                            borderColor: '#f44336',
+                            backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            yAxisID: 'y1',
+                            pointRadius: 3,
+                            pointHoverRadius: 5
+                        },
+                        {
+                            label: 'Cost Score (scaled)',
+                            data: normalizedCosts,
+                            borderColor: '#4caf50',
+                            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            yAxisID: 'y',
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            borderDash: [5, 5]
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { 
+                            display: true, 
+                            position: 'top',
+                            labels: {
+                                font: { size: 12 },
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.datasetIndex === 3) {
+                                        // Show actual cost value for normalized cost
+                                        const actualCost = costs[context.dataIndex];
+                                        label += actualCost.toFixed(2) + ' (scaled)';
+                                    } else {
+                                        label += context.parsed.y.toFixed(2);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time',
+                                font: { size: 12, weight: 'bold' }
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: { size: 10 }
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Travel Time / Delay / Cost (min)',
+                                font: { size: 12, weight: 'bold' }
+                            },
+                            beginAtZero: true
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Congestion Ratio',
+                                font: { size: 12, weight: 'bold' }
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        async function refreshData() {
+            const { routeId, routeIndex } = getRouteParams();
+            const btn = document.getElementById('refresh-btn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Refreshing...';
+
+            try {
+                // First, refresh the route data in the database by calling the refresh endpoint
+                // Get latest route info from current data
+                const currentUrl = `/api/route-analysis/${encodeURIComponent(routeId)}${routeIndex !== null ? `?route_index=${routeIndex}` : ''}&_t=${new Date().getTime()}`;
+                const currentResponse = await fetch(currentUrl, {
+                    cache: 'no-store',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                const currentData = await currentResponse.json();
+
+                if (!currentData.latest) {
+                    throw new Error('No route data found to refresh');
+                }
+
+                const latest = currentData.latest;
+                const origin = latest.origin?.name || latest.origin;
+                const dest = latest.destination?.name || latest.destination;
+
+                // Refresh route data by calling the refresh endpoint
+                const refreshResponse = await fetch('/api/refresh-route', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    },
+                    body: JSON.stringify({
+                        origin: origin,
+                        destination: dest,
+                        maxAlternatives: 3,
+                        alpha: 1.0,
+                        beta: 0.5,
+                        gamma: 0.001
+                    }),
+                    cache: 'no-store'
+                });
+
+                if (!refreshResponse.ok) {
+                    const error = await refreshResponse.json();
+                    throw new Error(error.detail || 'Refresh failed');
+                }
+
+                // Wait a moment for database to update
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Reload analysis data with fresh fetch
+                await loadAnalysisData();
+            } catch (error) {
+                showError(`Refresh failed: ${error.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '🔄 Refresh Data';
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('loading').style.display = 'none';
+            const errorContainer = document.getElementById('error-container');
+            errorContainer.innerHTML = `<div class="error">${message}</div>`;
+        }
+
+        // Wait for Chart.js to be fully loaded before initializing
+        function waitForChartJS(callback, maxAttempts = 20) {
+            if (typeof Chart !== 'undefined') {
+                callback();
+            } else if (maxAttempts > 0) {
+                setTimeout(() => waitForChartJS(callback, maxAttempts - 1), 100);
+            } else {
+                console.error('Chart.js failed to load');
+                showError('Chart library failed to load. Please refresh the page.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Wait for Chart.js to be ready before loading data
+            waitForChartJS(() => {
+                console.log('Chart.js loaded, initializing report...');
+            loadAnalysisData();
+            });
+        });
+    </script>
+</body>
+</html>

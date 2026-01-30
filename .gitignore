@@ -1,0 +1,43 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Environment & config
+.env
+.venv/
+venv/
+env/
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+
+# Local databases and data dumps
+traffic_analysis.db
+traffic_results.csv
+routes.csv
+
+# ML models and artifacts
+rf_model.pkl
+
+# Generated exports and reports
+exports/
+visuals/
+Report/
+
+# Test and coverage outputs
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Docker overrides
+docker-compose.override.yml

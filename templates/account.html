@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account - Traffic Dashboard</title>
+    <link rel="stylesheet" href="/static/elite-styles.css">
+    <style>
+        /* Override elite-styles.css for account page */
+        body {
+            background: #f7fafc !important;
+            color: #1a202c !important;
+            position: relative !important;
+        }
+        
+        /* Disable elite-styles background overlays */
+        body::before,
+        body::after {
+            display: none !important;
+            pointer-events: none !important;
+        }
+        
+        /* Override any container styles that might block clicks */
+        .container {
+            pointer-events: auto !important;
+        }
+        
+        /* Ensure account grid doesn't block clicks */
+        .account-grid {
+            pointer-events: auto !important;
+            position: relative;
+            z-index: 100 !important;
+        }
+        
+        /* Ensure account container is above everything */
+        .account-container {
+            position: relative !important;
+            z-index: 1000 !important;
+        }
+        
+        /* Ensure navigation is clickable */
+        .account-sidebar {
+            position: relative !important;
+            z-index: 1001 !important;
+            pointer-events: auto !important;
+        }
+        
+        .account-sidebar * {
+            pointer-events: auto !important;
+        }
+        
+        .nav-menu {
+            position: relative !important;
+            z-index: 1002 !important;
+            pointer-events: auto !important;
+        }
+        
+        .nav-menu li {
+            position: relative !important;
+            z-index: 1003 !important;
+            pointer-events: auto !important;
+        }
+        
+        .nav-menu a,
+        .nav-menu .nav-link {
+            position: relative !important;
+            z-index: 1004 !important;
+            pointer-events: auto !important;
+        }
+        
+        .account-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 15px;
+            background: transparent !important;
+        }
+        .account-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .account-header h1 {
+            margin: 0;
+            color: #1a202c !important;
+        }
+        .account-content h2 {
+            color: #1a202c !important;
+            margin-bottom: 15px;
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .account-content h3 {
+            color: #1a202c !important;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        .account-content p {
+            color: #4a5568 !important;
+        }
+        .account-grid {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 15px;
+            align-items: start;
+        }
+        
+        @media (max-width: 768px) {
+            .account-grid {
+                grid-template-columns: 1fr;
+            }
+            .account-sidebar {
+                position: static;
+            }
+        }
+        .account-sidebar {
+            background: white;
+            padding: 18px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+            position: sticky;
+            top: 15px;
+            max-height: calc(100vh - 30px);
+            overflow-y: auto;
+            z-index: 100;
+            pointer-events: auto;
+        }
+        .account-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            margin: 0 auto 15px;
+        }
+        .user-info {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .user-info h2 {
+            margin: 10px 0 5px;
+            color: #1a202c !important;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .user-info p {
+            color: #718096 !important;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            position: relative;
+            z-index: 100;
+        }
+        .nav-menu li {
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 10;
+        }
+        .nav-menu a,
+        .nav-menu .nav-link {
+            display: block !important;
+            padding: 12px 15px !important;
+            color: #4a5568 !important;
+            text-decoration: none !important;
+            border-radius: 8px !important;
+            transition: all 0.3s !important;
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            position: relative !important;
+            z-index: 99999 !important;
+            user-select: none !important;
+            background: transparent !important;
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+        }
+        
+        .nav-menu a:hover {
+            background: #e3f2fd !important;
+            color: #667eea !important;
+        }
+        .nav-menu a:hover, 
+        .nav-menu a.active,
+        .nav-menu .nav-link:hover,
+        .nav-menu .nav-link.active {
+            background: #e3f2fd !important;
+            color: #667eea !important;
+            font-weight: 600 !important;
+        }
+        .nav-menu li {
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 10;
+        }
+        .section {
+            display: none !important;
+        }
+        .section.active {
+            display: block !important;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #4a5568 !important;
+        }
+        .info-value {
+            color: #1a202c !important;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+        }
+        .route-list {
+            list-style: none;
+            padding: 0;
+        }
+        .route-item {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .route-item:hover {
+            background: #f7fafc;
+        }
+        
+        /* Theme Support */
+        :root {
+            --bg-color: #f7fafc;
+            --text-color: #1a202c;
+            --card-bg: white;
+            --border-color: #e2e8f0;
+        }
+        
+        body.theme-dark {
+            background: #1a202c !important;
+            color: #f7fafc !important;
+        }
+        
+        body.theme-dark .account-container {
+            background: #1a202c !important;
+        }
+        
+        body.theme-dark .account-sidebar,
+        body.theme-dark .account-content {
+            background: #2d3748 !important;
+            color: #f7fafc !important;
+        }
+        
+        body.theme-dark .account-sidebar h2,
+        body.theme-dark .account-content h2,
+        body.theme-dark .account-content h3 {
+            color: #f7fafc !important;
+        }
+        
+        body.theme-dark .info-row {
+            border-bottom-color: #4a5568 !important;
+        }
+        
+        body.theme-dark .info-label,
+        body.theme-dark .info-value {
+            color: #e2e8f0 !important;
+        }
+        
+        body.theme-dark .nav-menu a {
+            color: #cbd5e0 !important;
+        }
+        
+        body.theme-dark .nav-menu a:hover,
+        body.theme-dark .nav-menu a.active {
+            background: #4a5568 !important;
+            color: #90cdf4 !important;
+        }
+        
+        body.theme-dark .stat-card {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%) !important;
+        }
+        
+        body.theme-dark .info-row[style*="background: #f7fafc"] {
+            background: #2d3748 !important;
+        }
+        
+        body.theme-dark select,
+        body.theme-dark input[type="text"],
+        body.theme-dark input[type="number"] {
+            background: #2d3748 !important;
+            color: #f7fafc !important;
+            border-color: #4a5568 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="account-container">
+        <div class="account-header">
+            <h1>👤 My Account</h1>
+            <div>
+                <button class="btn btn-primary" onclick="window.location.href='/'">🏠 Home</button>
+            </div>
+        </div>
+
+        <div class="account-grid">
+            <div class="account-sidebar">
+                <div class="user-avatar" id="user-avatar">👤</div>
+                <div class="user-info">
+                    <h2 id="user-name">Loading...</h2>
+                    <p id="user-email">Loading...</p>
+                    <p id="user-role" style="color: #667eea; font-weight: 600;"></p>
+                </div>
+                <ul class="nav-menu" id="nav-menu">
+                    <li><a href="javascript:void(0)" class="nav-link active" onclick="switchSection('overview', this); return false;">📊 Overview</a></li>
+                    <li><a href="javascript:void(0)" class="nav-link" onclick="switchSection('profile', this); return false;">👤 Profile</a></li>
+                    <li><a href="javascript:void(0)" class="nav-link" onclick="switchSection('routes', this); return false;">🛣️ Saved Routes</a></li>
+                    <li><a href="javascript:void(0)" class="nav-link" onclick="switchSection('history', this); return false;">📜 History</a></li>
+                    <li id="admin-link-item" style="display: none;"><a href="/admin" style="background: #fef3c7; color: #92400e; font-weight: 600; border: 1px solid #fbbf24;">👑 Admin Panel</a></li>
+                    <li><a href="javascript:void(0)" class="nav-link" onclick="switchSection('settings', this); return false;">⚙️ Settings</a></li>
+                </ul>
+            </div>
+
+            <div class="account-content">
+                <!-- Overview Section -->
+                <div id="section-overview" class="section active">
+                    <h2 style="color: #1a202c !important; font-weight: 600;">Account Overview</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-routes">0</div>
+                            <div class="stat-label">Saved Routes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-analyses">0</div>
+                            <div class="stat-label">Route Analyses</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-ratings">0</div>
+                            <div class="stat-label">Ratings Given</div>
+                        </div>
+                    </div>
+                    <h3 style="color: #1a202c !important; font-weight: 600; margin-top: 20px; margin-bottom: 12px;">Recent Activity</h3>
+                    <div id="recent-activity" style="color: #4a5568 !important;">
+                        <div style="padding: 15px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #667eea;">
+                            <p style="margin: 0; color: #718096;">Loading recent activity...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile Section -->
+                <div id="section-profile" class="section">
+                    <h2 style="color: #1a202c !important; font-weight: 600;">Profile Information</h2>
+                    <div id="profile-info">
+                        <div class="info-row">
+                            <span class="info-label">Username:</span>
+                            <span class="info-value" id="profile-username">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Email:</span>
+                            <span class="info-value" id="profile-email">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Full Name:</span>
+                            <span class="info-value" id="profile-fullname">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Account Status:</span>
+                            <span class="info-value" id="profile-status">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Member Since:</span>
+                            <span class="info-value" id="profile-created">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Last Login:</span>
+                            <span class="info-value" id="profile-lastlogin">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Saved Routes Section -->
+                <div id="section-routes" class="section">
+                    <h2 style="color: #1a202c !important; font-weight: 600;">Saved Routes</h2>
+                    <div id="saved-routes-list" style="color: #4a5568 !important;">Loading...</div>
+                </div>
+
+                <!-- History Section -->
+                <div id="section-history" class="section">
+                    <h2 style="color: #1a202c !important; font-weight: 600; margin-bottom: 15px;">Route Analysis History</h2>
+                    <div id="analysis-history" style="color: #4a5568 !important;">
+                        <div style="padding: 15px; background: #f7fafc; border-radius: 8px;">
+                            <p style="margin: 0; color: #718096;">Loading history...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="section-settings" class="section">
+                    <h2 style="color: #1a202c !important; font-weight: 600;">Account Settings</h2>
+                    
+                    <div style="margin-top: 20px;">
+                        <div class="info-row" style="padding: 20px; background: #f7fafc; border-radius: 8px; margin-bottom: 15px;">
+                            <div>
+                                <div class="info-label" style="font-size: 16px; margin-bottom: 8px;">🔔 Email Notifications</div>
+                                <div class="info-value" style="font-size: 14px; color: #718096; margin-bottom: 12px;">Receive email notifications for route updates and traffic alerts</div>
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                    <input type="checkbox" id="email-notifications" checked style="width: 20px; height: 20px; cursor: pointer; accent-color: #667eea;">
+                                    <span id="email-notifications-label">Enable email notifications</span>
+                                    <span id="email-notifications-status" style="margin-left: auto; font-weight: 600; color: #10b981;">✓ Enabled</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="info-row" style="padding: 20px; background: #f7fafc; border-radius: 8px; margin-bottom: 15px;">
+                            <div>
+                                <div class="info-label" style="font-size: 16px; margin-bottom: 8px;">🌐 Language Preference</div>
+                                <div class="info-value" style="font-size: 14px; color: #718096; margin-bottom: 12px;">Choose your preferred language</div>
+                                <div style="display: flex; align-items: center; gap: 15px;">
+                                    <select id="language-preference" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; width: 200px; font-size: 14px; cursor: pointer;">
+                                        <option value="en">English</option>
+                                        <option value="hi">Hindi (हिंदी)</option>
+                                        <option value="ta">Tamil (தமிழ்)</option>
+                                        <option value="te">Telugu (తెలుగు)</option>
+                                    </select>
+                                    <span id="language-status" style="font-weight: 600; color: #667eea;">Current: English</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-row" style="padding: 20px; background: #f7fafc; border-radius: 8px; margin-bottom: 15px;">
+                            <div>
+                                <div class="info-label" style="font-size: 16px; margin-bottom: 8px;">🎨 Theme Preference</div>
+                                <div class="info-value" style="font-size: 14px; color: #718096; margin-bottom: 12px;">Choose your preferred theme</div>
+                                <select id="theme-preference" style="padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; width: 200px; font-size: 14px;">
+                                    <option value="light">Light</option>
+                                    <option value="dark">Dark</option>
+                                    <option value="auto">Auto (System)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="info-row" style="padding: 20px; background: #f7fafc; border-radius: 8px; margin-bottom: 15px;">
+                            <div>
+                                <div class="info-label" style="font-size: 16px; margin-bottom: 8px;">🔒 Privacy Settings</div>
+                                <div class="info-value" style="font-size: 14px; color: #718096; margin-bottom: 12px;">Control your privacy preferences</div>
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin-bottom: 10px;">
+                                    <input type="checkbox" id="share-analytics" style="width: 20px; height: 20px; cursor: pointer; accent-color: #667eea;">
+                                    <span>Share anonymous usage analytics</span>
+                                    <span id="share-analytics-status" style="margin-left: auto; font-weight: 600; color: #ef4444;">✗ Disabled</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                                    <input type="checkbox" id="public-profile" style="width: 20px; height: 20px; cursor: pointer; accent-color: #667eea;">
+                                    <span>Make profile public</span>
+                                    <span id="public-profile-status" style="margin-left: auto; font-weight: 600; color: #ef4444;">✗ Disabled</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+                            <button class="btn btn-primary" onclick="saveSettings()" style="padding: 12px 24px; font-size: 16px; font-weight: 600;">
+                                💾 Save Settings
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetSettings()" style="padding: 12px 24px; font-size: 16px; font-weight: 600; margin-left: 10px; background: #e2e8f0; color: #4a5568; border: none;">
+                                🔄 Reset to Defaults
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/auth.js"></script>
+    <script>
+        // Define showSection function immediately to ensure it's available
+        function showSection(sectionName, clickedElement) {
+            console.log('showSection called:', sectionName, clickedElement);
+            
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            // Show selected section
+            const targetSection = document.getElementById(`section-${sectionName}`);
+            if (targetSection) {
+                targetSection.classList.add('active');
+                console.log('Section shown:', sectionName);
+            } else {
+                console.error('Section not found:', `section-${sectionName}`);
+            }
+            
+            // Update active nav link
+            document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
+            if (clickedElement) {
+                clickedElement.classList.add('active');
+            } else {
+                // Find the link by section name
+                const navLinks = document.querySelectorAll('.nav-menu a');
+                navLinks.forEach(link => {
+                    const onclickAttr = link.getAttribute('onclick');
+                    if (onclickAttr && onclickAttr.includes(sectionName)) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+            
+            // Load section-specific data
+            if (sectionName === 'history') {
+                if (typeof loadAnalysisHistory === 'function') {
+                    loadAnalysisHistory();
+                }
+            } else if (sectionName === 'routes') {
+                if (typeof loadSavedRoutes === 'function') {
+                    loadSavedRoutes();
+                }
+            } else if (sectionName === 'profile') {
+                // Profile data is already loaded in updateUserInfo()
+            } else if (sectionName === 'overview') {
+                // Overview data is already loaded in loadUserStats()
+            }
+        }
+        
+        // Make showSection globally accessible immediately
+        window.showSection = showSection;
+        
+        // currentUser is already declared in auth.js, so we use that one
+        // If auth.js hasn't loaded yet, we'll use a local reference
+        let accountCurrentUser = null;
+
+        async function loadAccountData() {
+            const token = localStorage.getItem('access_token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Not authenticated');
+                }
+
+                // Get user data and store in local variable
+                const userData = await response.json();
+                accountCurrentUser = userData;
+                
+                // Also update global currentUser from auth.js if it exists
+                if (typeof window.currentUser !== 'undefined') {
+                    // Note: We can't reassign a let variable from another scope
+                    // So we'll use accountCurrentUser throughout this file
+                }
+                updateUserInfo();
+                loadUserStats();
+                loadSavedRoutes();
+            } catch (error) {
+                console.error('Error loading account:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        function updateUserInfo() {
+            // Use currentUser from auth.js if available, otherwise use accountCurrentUser
+            const user = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : accountCurrentUser;
+            if (!user) return;
+            
+            document.getElementById('user-name').textContent = user.username || 'User';
+            document.getElementById('user-email').textContent = user.email || '';
+            document.getElementById('user-role').textContent = user.is_admin ? '👑 Administrator' : '👤 User';
+            
+            // Show admin panel link for admins
+            if (user.is_admin) {
+                const adminLink = document.getElementById('admin-link-item');
+                if (adminLink) {
+                    adminLink.style.display = 'block';
+                    // Make sure the link works
+                    const adminLinkAnchor = adminLink.querySelector('a');
+                    if (adminLinkAnchor) {
+                        adminLinkAnchor.href = '/admin';
+                        adminLinkAnchor.onclick = null; // Remove any onclick that might interfere
+                    }
+                }
+            } else {
+                const adminLink = document.getElementById('admin-link-item');
+                if (adminLink) adminLink.style.display = 'none';
+            }
+            
+            // Update profile info (user variable is already defined above)
+            document.getElementById('profile-username').textContent = user.username || '-';
+            document.getElementById('profile-email').textContent = user.email || '-';
+            document.getElementById('profile-fullname').textContent = user.full_name || 'Not set';
+            document.getElementById('profile-status').textContent = user.is_active ? '✅ Active' : '❌ Inactive';
+            
+            if (user.created_at) {
+                const created = new Date(user.created_at);
+                document.getElementById('profile-created').textContent = created.toLocaleDateString();
+            }
+            
+            if (user.last_login) {
+                const lastLogin = new Date(user.last_login);
+                document.getElementById('profile-lastlogin').textContent = lastLogin.toLocaleString();
+            } else {
+                document.getElementById('profile-lastlogin').textContent = 'Never';
+            }
+        }
+
+        async function loadUserStats() {
+            try {
+                const token = localStorage.getItem('access_token');
+                
+                // Load saved routes count
+                const routesRes = await fetch('/api/saved-routes', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (routesRes.ok) {
+                    const routes = await routesRes.json();
+                    document.getElementById('stat-routes').textContent = routes.length || 0;
+                }
+
+                // Load user stats if endpoint exists
+                try {
+                    const statsRes = await fetch('/api/user/stats', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (statsRes.ok) {
+                        const stats = await statsRes.json();
+                        document.getElementById('stat-analyses').textContent = stats.analyses || 0;
+                        document.getElementById('stat-ratings').textContent = stats.ratings || 0;
+                    } else {
+                        document.getElementById('stat-analyses').textContent = '0';
+                        document.getElementById('stat-ratings').textContent = '0';
+                    }
+                } catch (e) {
+                    document.getElementById('stat-analyses').textContent = '0';
+                    document.getElementById('stat-ratings').textContent = '0';
+                }
+                
+                // Load recent activity
+                loadRecentActivity();
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        async function loadRecentActivity() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const activityDiv = document.getElementById('recent-activity');
+                
+                // Try to load recent routes
+                const routesRes = await fetch('/api/saved-routes', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (routesRes.ok) {
+                    const routes = await routesRes.json();
+                    if (routes.length > 0) {
+                        const recent = routes.slice(0, 5);
+                        activityDiv.innerHTML = recent.map(route => `
+                            <div style="padding: 12px; background: #f7fafc; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #667eea;">
+                                <div style="font-weight: 600; color: #1a202c; margin-bottom: 4px;">${route.route_name || 'Unnamed Route'}</div>
+                                <div style="font-size: 13px; color: #718096;">${route.origin} → ${route.destination}</div>
+                            </div>
+                        `).join('');
+                    } else {
+                        activityDiv.innerHTML = '<div style="padding: 15px; background: #f7fafc; border-radius: 8px; text-align: center; color: #718096;">No recent activity</div>';
+                    }
+                } else {
+                    activityDiv.innerHTML = '<div style="padding: 15px; background: #f7fafc; border-radius: 8px; text-align: center; color: #718096;">No recent activity</div>';
+                }
+            } catch (error) {
+                console.error('Error loading activity:', error);
+                document.getElementById('recent-activity').innerHTML = '<div style="padding: 15px; background: #f7fafc; border-radius: 8px; text-align: center; color: #718096;">Unable to load activity</div>';
+            }
+        }
+        
+        async function loadAnalysisHistory() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const historyDiv = document.getElementById('analysis-history');
+                
+                // Load analysis history from user stats
+                const statsRes = await fetch('/api/user/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (statsRes.ok) {
+                    const stats = await statsRes.json();
+                    const recentAnalyses = stats.recent_analyses || [];
+                    
+                    if (recentAnalyses.length > 0) {
+                        historyDiv.innerHTML = recentAnalyses.map(analysis => `
+                            <div style="padding: 15px; background: #f7fafc; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #667eea;">
+                                <div style="font-weight: 600; color: #1a202c; margin-bottom: 8px;">${analysis.route_id || 'Route Analysis'}</div>
+                                <div style="display: flex; gap: 20px; font-size: 13px; color: #718096;">
+                                    <span>⏱️ ${Math.round(analysis.travel_time / 60)} min</span>
+                                    <span>💰 Cost: ${analysis.cost ? analysis.cost.toFixed(2) : 'N/A'}</span>
+                                    <span>📅 ${analysis.timestamp ? new Date(analysis.timestamp).toLocaleDateString() : 'N/A'}</span>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        historyDiv.innerHTML = '<div style="padding: 15px; background: #f7fafc; border-radius: 8px; text-align: center; color: #718096;">No analysis history yet. Start analyzing routes to see your history here.</div>';
+                    }
+                } else {
+                    historyDiv.innerHTML = '<div style="padding: 15px; background: #f7fafc; border-radius: 8px; text-align: center; color: #718096;">Unable to load history</div>';
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                document.getElementById('analysis-history').innerHTML = '<div style="padding: 15px; background: #f7fafc; border-radius: 8px; text-align: center; color: #718096;">Unable to load history</div>';
+            }
+        }
+
+        async function loadSavedRoutes() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch('/api/saved-routes', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const routes = await response.json();
+                    const list = document.getElementById('saved-routes-list');
+                    if (routes.length === 0) {
+                        list.innerHTML = '<p>No saved routes yet.</p>';
+                    } else {
+                        list.innerHTML = '<ul class="route-list">' + routes.map(route => `
+                            <li class="route-item">
+                                <div>
+                                    <strong>${route.route_name}</strong><br>
+                                    <small>${route.origin} → ${route.destination}</small>
+                                </div>
+                                <button class="btn btn-primary" onclick="useRoute(${route.id})">Use</button>
+                            </li>
+                        `).join('') + '</ul>';
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading routes:', error);
+            }
+        }
+
+        // showSection is already defined at the top of the script
+
+        function useRoute(routeId) {
+            // Navigate to home and use the route
+            window.location.href = '/';
+        }
+        
+        // Apply theme to page
+        function applyTheme(theme) {
+            const body = document.body;
+            const accountContainer = document.querySelector('.account-container');
+            
+            // Remove existing theme classes
+            body.classList.remove('theme-light', 'theme-dark');
+            if (accountContainer) {
+                accountContainer.classList.remove('theme-light', 'theme-dark');
+            }
+            
+            if (theme === 'dark') {
+                body.classList.add('theme-dark');
+                if (accountContainer) accountContainer.classList.add('theme-dark');
+                // Apply dark theme styles
+                document.documentElement.style.setProperty('--bg-color', '#1a202c');
+                document.documentElement.style.setProperty('--text-color', '#f7fafc');
+            } else if (theme === 'auto') {
+                // Use system preference
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (prefersDark) {
+                    body.classList.add('theme-dark');
+                    if (accountContainer) accountContainer.classList.add('theme-dark');
+                } else {
+                    body.classList.add('theme-light');
+                    if (accountContainer) accountContainer.classList.add('theme-light');
+                }
+            } else {
+                // Light theme (default)
+                body.classList.add('theme-light');
+                if (accountContainer) accountContainer.classList.add('theme-light');
+                document.documentElement.style.setProperty('--bg-color', '#f7fafc');
+                document.documentElement.style.setProperty('--text-color', '#1a202c');
+            }
+        }
+        
+        // Apply language
+        function applyLanguage(lang) {
+            console.log('Language changed to:', lang);
+            
+            // Update language status display
+            const langStatus = document.getElementById('language-status');
+            if (langStatus) {
+                const langNames = {
+                    'en': 'English',
+                    'hi': 'Hindi (हिंदी)',
+                    'ta': 'Tamil (தமிழ்)',
+                    'te': 'Telugu (తెలుగు)'
+                };
+                langStatus.textContent = `Current: ${langNames[lang] || 'English'}`;
+            }
+            
+            // Update page language attribute
+            document.documentElement.lang = lang;
+            
+            // Store current language for future use
+            localStorage.setItem('currentLanguage', lang);
+            
+            // Future: Implement full translation system
+            // For now, update visible text based on language
+            updateLanguageTexts(lang);
+        }
+        
+        // Update page texts based on language
+        function updateLanguageTexts(lang) {
+            // This is a basic implementation - can be expanded
+            const translations = {
+                'en': {
+                    'emailNotifications': 'Enable email notifications',
+                    'languagePreference': 'Language Preference',
+                    'themePreference': 'Theme Preference',
+                    'privacySettings': 'Privacy Settings',
+                    'shareAnalytics': 'Share anonymous usage analytics',
+                    'publicProfile': 'Make profile public'
+                },
+                'hi': {
+                    'emailNotifications': 'ईमेल सूचनाएं सक्षम करें',
+                    'languagePreference': 'भाषा वरीयता',
+                    'themePreference': 'थीम वरीयता',
+                    'privacySettings': 'गोपनीयता सेटिंग्स',
+                    'shareAnalytics': 'अनाम उपयोग एनालिटिक्स साझा करें',
+                    'publicProfile': 'प्रोफ़ाइल सार्वजनिक करें'
+                },
+                'ta': {
+                    'emailNotifications': 'மின்னஞ்சல் அறிவிப்புகளை இயக்கவும்',
+                    'languagePreference': 'மொழி விருப்பம்',
+                    'themePreference': 'தீம் விருப்பம்',
+                    'privacySettings': 'தனியுரிமை அமைப்புகள்',
+                    'shareAnalytics': 'அடையாளமில்லாத பயன்பாட்டு பகுப்பாய்வைப் பகிரவும்',
+                    'publicProfile': 'சுயவிவரத்தை பொது செய்'
+                },
+                'te': {
+                    'emailNotifications': 'ఇమెయిల్ నోటిఫికేషన్లను ప్రారంభించండి',
+                    'languagePreference': 'భాష ప్రాధాన్యత',
+                    'themePreference': 'థీమ్ ప్రాధాన్యత',
+                    'privacySettings': 'గోప్యతా సెట్టింగ్‌లు',
+                    'shareAnalytics': 'అజ్ఞాత వినియోగ విశ్లేషణను భాగస్వామ్యం చేయండి',
+                    'publicProfile': 'ప్రొఫైల్‌ను పబ్లిక్‌గా చేయండి'
+                }
+            };
+            
+            const texts = translations[lang] || translations['en'];
+            
+            // Update labels if elements exist
+            const emailLabel = document.getElementById('email-notifications-label');
+            if (emailLabel) emailLabel.textContent = texts.emailNotifications;
+            
+            // Note: Full translation would require updating all text elements
+            // This is a basic implementation
+        }
+        
+        // Settings functions
+        function saveSettings() {
+            const settings = {
+                emailNotifications: document.getElementById('email-notifications').checked,
+                language: document.getElementById('language-preference').value,
+                theme: document.getElementById('theme-preference').value,
+                shareAnalytics: document.getElementById('share-analytics').checked,
+                publicProfile: document.getElementById('public-profile').checked
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('userSettings', JSON.stringify(settings));
+            
+            // Apply settings immediately
+            applyTheme(settings.theme);
+            applyLanguage(settings.language);
+            
+            // Show success message
+            const message = document.createElement('div');
+            message.textContent = '✅ Settings saved successfully!';
+            message.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; font-weight: 600;';
+            document.body.appendChild(message);
+            setTimeout(() => message.remove(), 3000);
+        }
+        
+        function resetSettings() {
+            if (confirm('Are you sure you want to reset all settings to defaults?')) {
+                document.getElementById('email-notifications').checked = true;
+                document.getElementById('language-preference').value = 'en';
+                document.getElementById('theme-preference').value = 'light';
+                document.getElementById('share-analytics').checked = false;
+                document.getElementById('public-profile').checked = false;
+                localStorage.removeItem('userSettings');
+                
+                // Apply defaults
+                applyTheme('light');
+                applyLanguage('en');
+                
+                const message = document.createElement('div');
+                message.textContent = '✅ Settings reset to defaults!';
+                message.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); z-index: 10000; font-weight: 600;';
+                document.body.appendChild(message);
+                setTimeout(() => message.remove(), 3000);
+            }
+        }
+        
+        // Load saved settings
+        function loadSettings() {
+            const saved = localStorage.getItem('userSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    if (settings.emailNotifications !== undefined) {
+                        const checkbox = document.getElementById('email-notifications');
+                        if (checkbox) {
+                            checkbox.checked = settings.emailNotifications;
+                            updateCheckboxStatus('email-notifications', settings.emailNotifications);
+                        }
+                    } else {
+                        // Default: checked
+                        const checkbox = document.getElementById('email-notifications');
+                        if (checkbox && checkbox.checked) {
+                            updateCheckboxStatus('email-notifications', true);
+                        }
+                    }
+                    if (settings.language) {
+                        const select = document.getElementById('language-preference');
+                        if (select) {
+                            select.value = settings.language;
+                            applyLanguage(settings.language);
+                        }
+                    }
+                    if (settings.theme) {
+                        const select = document.getElementById('theme-preference');
+                        if (select) {
+                            select.value = settings.theme;
+                            applyTheme(settings.theme);
+                        }
+                    }
+                    if (settings.shareAnalytics !== undefined) {
+                        const checkbox = document.getElementById('share-analytics');
+                        if (checkbox) {
+                            checkbox.checked = settings.shareAnalytics;
+                            updateCheckboxStatus('share-analytics', settings.shareAnalytics);
+                        }
+                    } else {
+                        // Default: unchecked
+                        const checkbox = document.getElementById('share-analytics');
+                        if (checkbox) {
+                            updateCheckboxStatus('share-analytics', checkbox.checked);
+                        }
+                    }
+                    if (settings.publicProfile !== undefined) {
+                        const checkbox = document.getElementById('public-profile');
+                        if (checkbox) {
+                            checkbox.checked = settings.publicProfile;
+                            updateCheckboxStatus('public-profile', settings.publicProfile);
+                        }
+                    } else {
+                        // Default: unchecked
+                        const checkbox = document.getElementById('public-profile');
+                        if (checkbox) {
+                            updateCheckboxStatus('public-profile', checkbox.checked);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error loading settings:', e);
+                }
+            } else {
+                // Apply defaults and update status displays
+                applyTheme('light');
+                const emailCheckbox = document.getElementById('email-notifications');
+                if (emailCheckbox) {
+                    updateCheckboxStatus('email-notifications', emailCheckbox.checked);
+                }
+                const shareCheckbox = document.getElementById('share-analytics');
+                if (shareCheckbox) {
+                    updateCheckboxStatus('share-analytics', shareCheckbox.checked);
+                }
+                const profileCheckbox = document.getElementById('public-profile');
+                if (profileCheckbox) {
+                    updateCheckboxStatus('public-profile', profileCheckbox.checked);
+                }
+            }
+        }
+        
+        // Add real-time change listeners
+        function setupSettingsListeners() {
+            const themeSelect = document.getElementById('theme-preference');
+            if (themeSelect) {
+                themeSelect.addEventListener('change', function() {
+                    applyTheme(this.value);
+                    // Auto-save on change
+                    saveSettings();
+                });
+            }
+            
+            const languageSelect = document.getElementById('language-preference');
+            if (languageSelect) {
+                languageSelect.addEventListener('change', function() {
+                    applyLanguage(this.value);
+                    // Auto-save on change
+                    saveSettings();
+                });
+            }
+            
+            // Auto-save checkboxes on change with visual feedback
+            const emailCheckbox = document.getElementById('email-notifications');
+            if (emailCheckbox) {
+                emailCheckbox.addEventListener('change', function() {
+                    updateCheckboxStatus('email-notifications', this.checked);
+                    saveSettings();
+                });
+            }
+            
+            const shareCheckbox = document.getElementById('share-analytics');
+            if (shareCheckbox) {
+                shareCheckbox.addEventListener('change', function() {
+                    updateCheckboxStatus('share-analytics', this.checked);
+                    saveSettings();
+                });
+            }
+            
+            const profileCheckbox = document.getElementById('public-profile');
+            if (profileCheckbox) {
+                profileCheckbox.addEventListener('change', function() {
+                    updateCheckboxStatus('public-profile', this.checked);
+                    saveSettings();
+                });
+            }
+        }
+        
+        // Update checkbox status display
+        function updateCheckboxStatus(checkboxId, isChecked) {
+            const statusMap = {
+                'email-notifications': 'email-notifications-status',
+                'share-analytics': 'share-analytics-status',
+                'public-profile': 'public-profile-status'
+            };
+            
+            const statusElement = document.getElementById(statusMap[checkboxId]);
+            if (statusElement) {
+                if (isChecked) {
+                    statusElement.textContent = '✓ Enabled';
+                    statusElement.style.color = '#10b981';
+                } else {
+                    statusElement.textContent = '✗ Disabled';
+                    statusElement.style.color = '#ef4444';
+                }
+            }
+        }
+        
+        // Make functions globally accessible
+        window.saveSettings = saveSettings;
+        window.resetSettings = resetSettings;
+
+        // Simple, direct function for switching sections
+        function switchSection(sectionName, clickedLink) {
+            console.log('Switching to section:', sectionName);
+            
+            try {
+                // Hide all sections
+                const allSections = document.querySelectorAll('.section');
+                allSections.forEach(s => {
+                    s.classList.remove('active');
+                    s.style.display = 'none';
+                });
+                
+                // Show selected section
+                const targetSection = document.getElementById(`section-${sectionName}`);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                    targetSection.style.display = 'block';
+                    console.log('Section shown:', sectionName);
+                } else {
+                    console.error('Section not found:', `section-${sectionName}`);
+                    return;
+                }
+                
+                // Update active nav link
+                const allLinks = document.querySelectorAll('.nav-menu a.nav-link');
+                allLinks.forEach(link => {
+                    link.classList.remove('active');
+                    link.style.background = 'transparent';
+                });
+                
+                if (clickedLink) {
+                    clickedLink.classList.add('active');
+                    clickedLink.style.background = '#e3f2fd';
+                }
+                
+                // Load section-specific data
+                if (sectionName === 'history') {
+                    if (typeof loadAnalysisHistory === 'function') {
+                        loadAnalysisHistory();
+                    }
+                } else if (sectionName === 'routes') {
+                    if (typeof loadSavedRoutes === 'function') {
+                        loadSavedRoutes();
+                    }
+                } else if (sectionName === 'settings') {
+                    // Load and apply settings when switching to settings section
+                    setTimeout(() => {
+                        if (typeof loadSettings === 'function') {
+                            loadSettings();
+                        }
+                        if (typeof setupSettingsListeners === 'function') {
+                            setupSettingsListeners();
+                        }
+                    }, 100);
+                }
+                
+                console.log('Successfully switched to:', sectionName);
+            } catch (error) {
+                console.error('Error switching section:', error);
+            }
+        }
+        
+        // Make function globally accessible
+        window.switchSection = switchSection;
+        
+        // Initialize page
+        function initializePage() {
+            console.log('Initializing account page...');
+            loadAccountData();
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                initializePage();
+                // Load settings immediately
+                setTimeout(() => {
+                    loadSettings();
+                    setupSettingsListeners();
+                }, 300);
+            });
+        } else {
+            initializePage();
+            setTimeout(() => {
+                loadSettings();
+                setupSettingsListeners();
+            }, 300);
+        }
+        
+        // Also load settings when switching to settings section
+        const originalSwitchSection = window.switchSection;
+        window.switchSection = function(sectionName, clickedLink) {
+            originalSwitchSection(sectionName, clickedLink);
+            if (sectionName === 'settings') {
+                setTimeout(() => {
+                    loadSettings();
+                    setupSettingsListeners();
+                }, 100);
+            }
+        };
+    </script>
+</body>
+</html>
+

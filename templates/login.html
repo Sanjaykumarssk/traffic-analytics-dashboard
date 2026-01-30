@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Traffic Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Poppins', 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #2a1f4a 100%);
+            background-attachment: fixed;
+            background-size: 400% 400%;
+            animation: gradientShift 20s ease infinite;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #f8f9fa;
+            position: relative;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
+            animation: particleFloat 25s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes particleFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        .auth-container {
+            background: rgba(10, 14, 39, 0.85);
+            backdrop-filter: blur(40px) saturate(180%);
+            border-radius: 32px;
+            padding: 50px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 
+                0 40px 120px rgba(0, 0, 0, 0.6),
+                0 0 0 2px rgba(212, 175, 55, 0.2),
+                inset 0 0 40px rgba(212, 175, 55, 0.1);
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            animation: slideDown 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-40px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .auth-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1.5px;
+            background: linear-gradient(120deg, rgba(56, 189, 248, 0.8), rgba(236, 72, 153, 0.8));
+            -webkit-mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+            mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        h1 {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #d4af37 0%, #c9a961 50%, #b8941f 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            font-weight: 800;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+            animation: glow 3s ease-in-out infinite;
+        }
+        
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5)); }
+            50% { filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.8)); }
+        }
+
+        .subtitle {
+            color: rgba(226, 232, 240, 0.7);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #cbd5f5;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid rgba(212, 175, 55, 0.2);
+            border-radius: 16px;
+            font-size: 15px;
+            font-family: 'Poppins', sans-serif;
+            background: rgba(10, 14, 39, 0.6);
+            color: #f8f9fa;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: rgba(212, 175, 55, 0.5);
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.2), 0 0 20px rgba(212, 175, 55, 0.3);
+            transform: translateY(-2px) scale(1.02);
+            background: rgba(10, 14, 39, 0.8);
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #d4af37 0%, #c9a961 50%, #b8941f 100%);
+            color: #0a0e27;
+            border: none;
+            border-radius: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 20px 45px rgba(212, 175, 55, 0.4);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        button:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        button:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 30px 60px rgba(212, 175, 55, 0.6);
+        }
+
+        .toggle-auth {
+            text-align: center;
+            margin-top: 20px;
+            color: rgba(226, 232, 240, 0.7);
+        }
+
+        .toggle-auth a {
+            color: #38bdf8;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fecaca;
+            padding: 16px 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(239, 68, 68, 0.5);
+            font-family: 'Poppins', sans-serif;
+            animation: shake 0.5s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="auth-container">
+        <h1>🚦 Traffic Dashboard</h1>
+        <p class="subtitle" id="subtitle">Login to your account</p>
+        <div id="error-message"></div>
+        <form id="auth-form">
+            <div class="form-group" id="name-group" style="display: none;">
+                <label>Full Name</label>
+                <input type="text" id="full-name" placeholder="Optional">
+            </div>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group" id="email-group" style="display: none;">
+                <label>Email</label>
+                <input type="email" id="email">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" id="submit-btn">Login</button>
+        </form>
+        <div class="toggle-auth">
+            <span id="toggle-text">Don't have an account? </span>
+            <a href="#" id="toggle-link" onclick="toggleMode(); return false;">Sign up</a>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="/" style="color: #667eea; text-decoration: none;">← Back to Home</a>
+        </div>
+    </div>
+    <script>
+        let isLogin = true;
+        function toggleMode() {
+            isLogin = !isLogin;
+            document.getElementById('subtitle').textContent = isLogin ? 'Login to your account' : 'Create your account';
+            document.getElementById('submit-btn').textContent = isLogin ? 'Login' : 'Sign Up';
+            document.getElementById('toggle-text').textContent = isLogin ? "Don't have an account? " : "Already have an account? ";
+            document.getElementById('toggle-link').textContent = isLogin ? 'Sign up' : 'Login';
+            document.getElementById('email-group').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('name-group').style.display = isLogin ? 'none' : 'block';
+        }
+        document.getElementById('auth-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.innerHTML = '';
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+            try {
+                if (isLogin) {
+                    const formData = new FormData();
+                    formData.append('username', document.getElementById('username').value);
+                    formData.append('password', document.getElementById('password').value);
+                    const res = await fetch('/api/auth/login', { method: 'POST', body: formData });
+                    if (!res.ok) throw new Error('Login failed');
+                    const data = await res.json();
+                    localStorage.setItem('access_token', data.access_token);
+                    
+                    // Check if user is admin and redirect accordingly
+                    try {
+                        const userRes = await fetch('/api/auth/me', {
+                            headers: {
+                                'Authorization': `Bearer ${data.access_token}`
+                            }
+                        });
+                        if (userRes.ok) {
+                            const user = await userRes.json();
+                            console.log('Login successful, user:', user);
+                            console.log('Is admin?', user.is_admin);
+                            
+                            // Check for redirect parameter first
+                            const urlParams = new URLSearchParams(window.location.search);
+                            const redirect = urlParams.get('redirect');
+                            
+                            if (redirect) {
+                                console.log('Redirecting to:', redirect);
+                                window.location.href = redirect;
+                            } else if (user.is_admin) {
+                                console.log('Admin user, redirecting to /admin');
+                                window.location.href = '/admin';
+                            } else {
+                                console.log('Regular user, redirecting to /');
+                                window.location.href = '/';
+                            }
+                        } else {
+                            console.log('Failed to get user info, redirecting to /');
+                            window.location.href = '/';
+                        }
+                    } catch (error) {
+                        console.error('Error checking user:', error);
+                        window.location.href = '/';
+                    }
+                } else {
+                    // Signup
+                    const email = document.getElementById('email').value;
+                    const username = document.getElementById('username').value;
+                    const password = document.getElementById('password').value;
+                    const fullName = document.getElementById('full-name').value || null;
+                    
+                    if (!email || !username || !password) {
+                        throw new Error('Please fill in all required fields');
+                    }
+                    
+                    // Validate password length
+                    if (password.length < 6) {
+                        throw new Error('Password must be at least 6 characters long.');
+                    }
+                    
+                    // Maximum password length (reasonable limit)
+                    const MAX_PASSWORD_LENGTH = 10000;
+                    if (password.length > MAX_PASSWORD_LENGTH) {
+                        throw new Error(`Password is too long. Maximum ${MAX_PASSWORD_LENGTH} characters allowed.`);
+                    }
+                    
+                    const res = await fetch('/api/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: username,
+                            email: email,
+                            password: password,
+                            full_name: fullName
+                        })
+                    });
+                    
+                    if (!res.ok) {
+                        let errorMsg = 'Registration failed';
+                        try {
+                            const err = await res.json();
+                            
+                            if (err.detail) {
+                                if (Array.isArray(err.detail)) {
+                                    errorMsg = err.detail.map(e => {
+                                        if (typeof e === 'object' && e.msg) return e.msg;
+                                        if (typeof e === 'string') return e;
+                                        return JSON.stringify(e);
+                                    }).join(', ');
+                                } else if (typeof err.detail === 'string') {
+                                    errorMsg = err.detail;
+                                } else if (err.detail.message) {
+                                    errorMsg = err.detail.message;
+                                } else {
+                                    // Try to extract meaningful error
+                                    const errStr = JSON.stringify(err.detail);
+                                    errorMsg = errStr.length < 100 ? errStr : 'Registration failed. Please check your input.';
+                                }
+                            } else if (typeof err === 'string') {
+                                errorMsg = err;
+                            } else if (err.message) {
+                                errorMsg = err.message;
+                            }
+                        } catch (parseError) {
+                            // If JSON parsing fails, use status text
+                            errorMsg = `Registration failed: ${res.statusText}`;
+                        }
+                        
+                        throw new Error(errorMsg);
+                    }
+                    
+                    const data = await res.json();
+                    alert('Registration successful! Please login.');
+                    toggleMode();
+                }
+            } catch (error) {
+                const errorText = error.message || 'An error occurred. Please try again.';
+                errorDiv.innerHTML = `<div class="error">${errorText}</div>`;
+                console.error('Auth error:', error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = isLogin ? 'Login' : 'Sign Up';
+            }
+        };
+    </script>
+</body>
+
+</html>

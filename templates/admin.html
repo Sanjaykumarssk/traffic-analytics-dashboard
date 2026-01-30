@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Traffic Analytics</title>
+    <link rel="stylesheet" href="/static/admin-styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Hide content until authentication is verified */
+        .admin-container {
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+        }
+        .admin-container.auth-verified {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>🚦 Admin Panel</h1>
+                <p class="admin-subtitle">Traffic Dashboard</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#dashboard" class="nav-item active" data-section="dashboard">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="#users" class="nav-item" data-section="users">
+                    <span class="icon">👥</span> User Management
+                </a>
+                <a href="#routes" class="nav-item" data-section="routes">
+                    <span class="icon">🛣️</span> Route Analytics
+                </a>
+                <a href="#system" class="nav-item" data-section="system">
+                    <span class="icon">⚙️</span> System Settings
+                </a>
+                <a href="#access-control" class="nav-item" data-section="access-control">
+                    <span class="icon">🔒</span> Access Control
+                </a>
+                <a href="#cache" class="nav-item" data-section="cache">
+                    <span class="icon">💾</span> Cache Management
+                </a>
+                <a href="#reports" class="nav-item" data-section="reports">
+                    <span class="icon">📈</span> Reports & Export
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">👤</div>
+                    <div class="user-details">
+                        <div class="user-name" id="admin-username">Admin</div>
+                        <div class="user-role">Administrator</div>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="content-header">
+                <h2 id="page-title">Dashboard Overview</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh</button>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="section-dashboard" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-users">0</div>
+                            <div class="stat-label">Total Users</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🛣️</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-routes">0</div>
+                            <div class="stat-label">Route Analyses</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⭐</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-saved">0</div>
+                            <div class="stat-label">Saved Routes</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💬</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="stat-ratings">0</div>
+                            <div class="stat-label">Ratings</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>User Growth</h3>
+                        <canvas id="userGrowthChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Route Analysis Trends</h3>
+                        <canvas id="routeTrendsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="recent-activity">
+                    <h3>Recent Activity</h3>
+                    <div id="activity-list" class="activity-list">
+                        <div class="activity-item">Loading...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="section-users" class="content-section">
+                <div class="section-header">
+                    <h3>User Management</h3>
+                    <div class="section-actions">
+                        <input type="text" id="user-search" placeholder="Search users..." class="search-input">
+                        <button class="btn btn-primary" onclick="showAddUserModal()">+ Add User</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Full Name</th>
+                                <th>Status</th>
+                                <th>Role</th>
+                                <th>Created</th>
+                                <th>Last Login</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <tr><td colspan="9">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination">
+                    <button class="btn btn-secondary" onclick="loadUsers(0)">First</button>
+                    <button class="btn btn-secondary" onclick="loadUsers(-1)">Previous</button>
+                    <span id="page-info">Page 1</span>
+                    <button class="btn btn-secondary" onclick="loadUsers(1)">Next</button>
+                </div>
+            </section>
+
+            <!-- Routes Section -->
+            <section id="section-routes" class="content-section">
+                <div class="section-header">
+                    <h3>Route Analytics</h3>
+                    <div class="section-actions">
+                        <select id="route-filter" class="filter-select">
+                            <option value="all">All Routes</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="route-total">0</div>
+                            <div class="stat-label">Total Analyses</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⏱️</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="route-avg-time">0</div>
+                            <div class="stat-label">Avg Travel Time</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🚗</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="route-avg-delay">0</div>
+                            <div class="stat-label">Avg Delay (min)</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="route-avg-cost">0</div>
+                            <div class="stat-label">Avg Cost</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Route</th>
+                                <th>Travel Time</th>
+                                <th>Delay</th>
+                                <th>Distance</th>
+                                <th>Cost</th>
+                                <th>Timestamp</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="routes-table-body">
+                            <tr><td colspan="8">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- System Section -->
+            <section id="section-system" class="content-section">
+                <div class="section-header">
+                    <h3>System Settings</h3>
+                </div>
+                <div class="settings-grid">
+                    <div class="setting-card">
+                        <h4>Database Status</h4>
+                        <div class="setting-info">
+                            <span class="status-badge" id="db-status">Checking...</span>
+                        </div>
+                        <button class="btn btn-secondary" onclick="checkDatabase()">Check Connection</button>
+                    </div>
+                    <div class="setting-card">
+                        <h4>ML Model Status</h4>
+                        <div class="setting-info">
+                            <span class="status-badge" id="ml-status">Checking...</span>
+                        </div>
+                        <button class="btn btn-secondary" onclick="checkMLModel()">Check Model</button>
+                    </div>
+                    <div class="setting-card">
+                        <h4>API Status</h4>
+                        <div class="setting-info">
+                            <span class="status-badge" id="api-status">Checking...</span>
+                        </div>
+                        <button class="btn btn-secondary" onclick="checkAPI()">Check API</button>
+                    </div>
+                </div>
+                
+            </section>
+
+            <!-- Admin Access Control Section (Separate Section) -->
+            <section id="section-access-control" class="content-section">
+                <div class="section-header">
+                    <h3>🔒 Admin Access Control</h3>
+                    <p style="color: #666; font-size: 14px; margin-top: 5px;">Manage admin permissions, security settings, and access controls</p>
+                </div>
+                <div class="settings-grid">
+                    <div class="setting-card">
+                        <h4>Access Control Settings</h4>
+                        <div class="setting-info" style="margin-bottom: 15px;">
+                            <p style="color: #666; font-size: 14px;">Manage who can access admin features</p>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <input type="checkbox" id="require-admin-approval" style="width: 20px; height: 20px;">
+                                <span>Require admin approval for new admin users</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <input type="checkbox" id="log-admin-actions" checked style="width: 20px; height: 20px;">
+                                <span>Log all admin actions</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="restrict-user-deletion" checked style="width: 20px; height: 20px;">
+                                <span>Require confirmation before deleting users</span>
+                            </label>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveAccessControlSettings()">Save Access Control Settings</button>
+                    </div>
+                    <div class="setting-card">
+                        <h4>Admin Permissions</h4>
+                        <div class="setting-info" style="margin-bottom: 15px;">
+                            <p style="color: #666; font-size: 14px;">Configure admin user permissions</p>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <input type="checkbox" id="can-manage-users" checked style="width: 20px; height: 20px;">
+                                <span>Can manage users</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <input type="checkbox" id="can-manage-routes" checked style="width: 20px; height: 20px;">
+                                <span>Can manage routes</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <input type="checkbox" id="can-clear-cache" checked style="width: 20px; height: 20px;">
+                                <span>Can clear cache</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="can-export-data" checked style="width: 20px; height: 20px;">
+                                <span>Can export data</span>
+                            </label>
+                        </div>
+                        <button class="btn btn-primary" onclick="savePermissionSettings()">Save Permissions</button>
+                    </div>
+                    <div class="setting-card">
+                        <h4>Security Settings</h4>
+                        <div class="setting-info" style="margin-bottom: 15px;">
+                            <p style="color: #666; font-size: 14px;">Configure security options</p>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 10px;">
+                                <span style="display: block; margin-bottom: 5px; font-weight: 600;">Session Timeout (minutes)</span>
+                                <input type="number" id="session-timeout" value="30" min="5" max="1440" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <input type="checkbox" id="require-2fa" style="width: 20px; height: 20px;">
+                                <span>Require two-factor authentication for admins</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="ip-whitelist" style="width: 20px; height: 20px;">
+                                <span>Enable IP whitelist for admin access</span>
+                            </label>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveSecuritySettings()">Save Security Settings</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cache Section -->
+            <section id="section-cache" class="content-section">
+                <div class="section-header">
+                    <h3>Cache Management</h3>
+                    <div class="section-actions">
+                        <button class="btn btn-danger" onclick="clearAllCache()">Clear All Cache</button>
+                    </div>
+                </div>
+                <div class="cache-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">💾</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="cache-size">0</div>
+                            <div class="stat-label">Cache Entries</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="cache-hits">0</div>
+                            <div class="stat-label">Cache Hits</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📉</div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="cache-misses">0</div>
+                            <div class="stat-label">Cache Misses</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="section-reports" class="content-section">
+                <div class="section-header">
+                    <h3>Reports & Export</h3>
+                </div>
+                <div class="reports-grid">
+                    <div class="report-card">
+                        <h4>User Report</h4>
+                        <p>Export all user data</p>
+                        <button class="btn btn-primary" onclick="exportUsers()">Export CSV</button>
+                    </div>
+                    <div class="report-card">
+                        <h4>Route Analysis Report</h4>
+                        <p>Export route analysis data</p>
+                        <button class="btn btn-primary" onclick="exportRoutes()">Export CSV</button>
+                    </div>
+                    <div class="report-card">
+                        <h4>System Report</h4>
+                        <p>Export system statistics</p>
+                        <button class="btn btn-primary" onclick="exportSystem()">Export JSON</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeUserModal()">&times;</span>
+            <h3 id="modal-title">Edit User</h3>
+            <form id="user-form">
+                <input type="hidden" id="user-id">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="modal-username" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="modal-email" required>
+                </div>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="modal-fullname">
+                </div>
+                <div class="form-group">
+                    <label>Password (leave blank to keep current password)</label>
+                    <input type="password" id="modal-password" placeholder="Enter new password (min 8 characters)">
+                    <small style="color: #666; font-size: 12px;">Only enter a password if you want to change it</small>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="modal-active" style="width: 20px; height: 20px; cursor: pointer; flex-shrink: 0;">
+                        <span style="flex: 1;">Is Active</span>
+                    </label>
+                    <small style="color: #666; font-size: 12px; margin-left: 30px; display: block; margin-top: 5px;">Uncheck to deactivate this user</small>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" id="modal-admin" style="width: 20px; height: 20px; cursor: pointer; flex-shrink: 0;">
+                        <span style="flex: 1;">Is Admin</span>
+                    </label>
+                    <small style="color: #666; font-size: 12px; margin-left: 30px; display: block; margin-top: 5px;">Check to grant admin privileges, uncheck to remove</small>
+                    <small id="self-admin-warning" style="color: #f59e0b; font-size: 12px; margin-left: 30px; display: none; margin-top: 5px; font-weight: 600;">⚠️ Note: You cannot remove your own admin privileges</small>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/static/admin.js?v=2.4"></script>
+</body>
+</html>
+
+
+
+
+
+

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Route Analyzer - Smart Route Suggestions</title>
+
+    <!-- PWA Support -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#764ba2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Elite Premium Styles with Premium Animations -->
+    <link rel="stylesheet" href="/static/elite-styles.css" />
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>🚦 Smart Route Analyzer</h1>
+                <p class="subtitle">AI-powered route suggestions with real-time traffic analysis</p>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <!-- Login Button (shown when not logged in) -->
+                <button id="login-button" onclick="window.location.href='/login'"
+                    style="padding: 10px 20px; background: white; color: #667eea; border: 2px solid #667eea; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;"
+                    onmouseover="this.style.background='#667eea'; this.style.color='white';"
+                    onmouseout="this.style.background='white'; this.style.color='#667eea';">
+                    🔑 Login / Sign Up
+                </button>
+                
+                <!-- User Menu (shown when logged in) -->
+                <div id="user-menu" style="display: none; align-items: center; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 8px; cursor: pointer; transition: all 0.3s;"
+                         onclick="navigateToAccount()"
+                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                        <span style="font-size: 18px;">👤</span>
+                        <span id="username-display" style="font-weight: 600;">User</span>
+                        <span style="font-size: 12px;">▼</span>
+                    </div>
+                    <button onclick="logout()" 
+                            style="padding: 8px 16px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid #ef4444; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;"
+                            onmouseover="this.style.background='#ef4444'; this.style.color='white';"
+                            onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'; this.style.color='#ef4444';">
+                        Logout
+                    </button>
+                </div>
+                
+                <button id="view-reports-btn" onclick="window.location.href='/analysis-report'"
+                    style="padding: 10px 20px; background: white; color: #667eea; border: 2px solid #667eea; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;"
+                    onmouseover="this.style.background='#667eea'; this.style.color='white';"
+                    onmouseout="this.style.background='white'; this.style.color='#667eea';">
+                    📊 View All Reports
+                </button>
+            </div>
+        </header>
+
+        <div class="search-panel" id="route-analyzer-panel">
+            <div class="input-group">
+                <div class="input-wrapper" style="position: relative; z-index: 1;">
+                    <div class="input-label">From</div>
+                    <input type="text" id="origin-input" placeholder="Enter origin location"
+                        autocomplete="off">
+                    <div class="autocomplete-dropdown" id="origin-autocomplete"></div>
+                </div>
+                <div class="input-wrapper" style="position: relative; z-index: 2;">
+                    <div class="input-label">To</div>
+                    <input type="text" id="dest-input" placeholder="Enter destination location"
+                        autocomplete="off">
+                    <div class="autocomplete-dropdown" id="dest-autocomplete"></div>
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button id="analyze-btn" onclick="handleAnalyzeClick()">🔍 Find Best Routes</button>
+                </div>
+            </div>
+            <div id="error-message"></div>
+        </div>
+        
+        <!-- Admin Message -->
+        <div id="admin-restriction-message" style="display: none; padding: 40px; text-align: center; background: rgba(255, 193, 7, 0.1); border: 2px solid rgba(255, 193, 7, 0.5); border-radius: 16px; margin: 20px;">
+            <h2 style="color: #ff9800; margin-bottom: 15px;">👑 Admin Access Restricted</h2>
+            <p style="color: #666; font-size: 16px; margin-bottom: 20px;">
+                Route analyzer and detailed reports are available only for regular users. As an admin, you can access the <strong>Admin Panel</strong> for system management.
+            </p>
+            <button onclick="window.location.href='/admin'" 
+                    style="padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 16px;">
+                Go to Admin Panel →
+            </button>
+        </div>
+
+        <div class="main-content">
+            <div class="map-container">
+                <div id="map"></div>
+            </div>
+
+            <div class="results-panel">
+                <h2>📍 Suggested Routes</h2>
+                <div id="results-container">
+                    <div style="padding: 40px; text-align: center; color: var(--elite-text-muted);">
+                        <p style="font-size: 1.1rem; margin: 0;">Enter origin and destination to get route suggestions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="comparison-panel" id="comparison-panel">
+            <h3>📊 Route Comparison</h3>
+            <div style="overflow-x: auto;">
+                <table class="comparison-table" id="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Route</th>
+                            <th>Travel Time</th>
+                            <th>Delay</th>
+                            <th>Distance</th>
+                            <th>Congestion</th>
+                            <th>Cost</th>
+                            <th>ML Prediction</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparison-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Popup Modal -->
+    <div id="info-popup-modal" class="info-popup-modal">
+        <div class="info-popup-content">
+            <span class="info-popup-close" onclick="closeInfoPopup()">&times;</span>
+            <h3 id="info-popup-title"></h3>
+            <div id="info-popup-text"></div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/static/auth.js"></script>
+    <script src="/static/app.js?v=2.4"></script>
+    <script>
+        // Wrapper function to ensure analyzeRoute is accessible
+        function handleAnalyzeClick() {
+            console.log('handleAnalyzeClick called');
+            if (typeof analyzeRoute === 'function') {
+                console.log('analyzeRoute function found, calling...');
+                analyzeRoute().catch(error => {
+                    console.error('Error in analyzeRoute:', error);
+                    const errorDiv = document.getElementById('error-message');
+                    if (errorDiv) {
+                        errorDiv.innerHTML = `<div class="error" style="padding: 15px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 8px; color: #ef4444; margin: 10px 0;">Error: ${error.message}</div>`;
+                    } else {
+                        alert('Error analyzing route: ' + error.message);
+                    }
+                });
+            } else {
+                console.error('analyzeRoute function not found');
+                alert('Route analyzer not initialized. Please refresh the page.');
+            }
+        }
+        
+        // Initialize auth on page load and hide route analyzer for admins
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOMContentLoaded - Initializing...');
+            
+            try {
+                await initAuth();
+                console.log('Auth initialized');
+            } catch (authError) {
+                console.warn('Auth init error (non-fatal):', authError);
+            }
+            
+            // Check if user is admin and hide route analyzer
+            try {
+                const user = await checkAuth();
+                if (user && user.is_admin) {
+                    console.log('Admin user detected, hiding route analyzer');
+                    // Hide route analyzer components
+                    const routePanel = document.getElementById('route-analyzer-panel');
+                    const resultsPanel = document.querySelector('.results-panel');
+                    const mapContainer = document.querySelector('.map-container');
+                    const comparisonPanel = document.getElementById('comparison-panel');
+                    const viewReportsBtn = document.getElementById('view-reports-btn');
+                    const adminMessage = document.getElementById('admin-restriction-message');
+                    
+                    if (routePanel) routePanel.style.display = 'none';
+                    if (resultsPanel) resultsPanel.style.display = 'none';
+                    if (mapContainer) mapContainer.style.display = 'none';
+                    if (comparisonPanel) comparisonPanel.style.display = 'none';
+                    if (viewReportsBtn) viewReportsBtn.style.display = 'none';
+                    if (adminMessage) adminMessage.style.display = 'block';
+                } else {
+                    console.log('Regular user, route analyzer enabled');
+                }
+            } catch (authError) {
+                console.warn('Auth check error (non-fatal):', authError);
+            }
+            
+            // Initialize map and autocomplete
+            try {
+                if (typeof initMap === 'function') {
+                    console.log('Initializing map...');
+                    initMap();
+                } else {
+                    console.warn('initMap function not found');
+                }
+            } catch (mapError) {
+                console.error('Map initialization error:', mapError);
+            }
+            
+            console.log('DOMContentLoaded - Initialization complete');
+        });
+
+        // Info Popup Functions
+        function showInfoPopup(title, content) {
+            const modal = document.getElementById('info-popup-modal');
+            const titleEl = document.getElementById('info-popup-title');
+            const textEl = document.getElementById('info-popup-text');
+            
+            if (modal && titleEl && textEl) {
+                titleEl.textContent = title;
+                textEl.innerHTML = content;
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            }
+        }
+
+        function closeInfoPopup() {
+            const modal = document.getElementById('info-popup-modal');
+            if (modal) {
+                modal.classList.remove('show');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('info-popup-modal');
+            if (event.target === modal) {
+                closeInfoPopup();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeInfoPopup();
+            }
+        });
+
+        // Make functions globally accessible
+        window.showInfoPopup = showInfoPopup;
+        window.closeInfoPopup = closeInfoPopup;
+    </script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/service-worker.js')
+                    .then((reg) => console.log('Service Worker registered'))
+                    .catch((err) => console.log('Service Worker registration failed:', err));
+            });
+        }
+
+        // GPS Integration
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        // Auto-fill origin with current location
+                        document.getElementById('origin-input').value = `${lat}, ${lon}`;
+                        document.getElementById('origin-input').dataset.lat = lat;
+                        document.getElementById('origin-input').dataset.lon = lon;
+                    },
+                    (error) => console.log('Geolocation error:', error)
+                );
+            }
+        }
+
+        // Add GPS button to header
+        document.addEventListener('DOMContentLoaded', () => {
+            const header = document.querySelector('header > div:last-child');
+            if (header) {
+                const gpsBtn = document.createElement('button');
+                gpsBtn.innerHTML = '📍 Use My Location';
+                gpsBtn.onclick = getCurrentLocation;
+                gpsBtn.style.cssText = 'padding: 10px 20px; background: white; color: #667eea; border: 2px solid #667eea; border-radius: 8px; font-weight: 600; cursor: pointer;';
+                header.insertBefore(gpsBtn, header.firstChild);
+            }
+        });
+    </script>
+</body>
+
+</html>
